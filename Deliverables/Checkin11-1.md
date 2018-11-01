@@ -18,7 +18,3 @@ The equations we will need in order to complete this challenge include a transfe
 
 ## Video
 https://youtu.be/Cffx8ZMp2q4
-
-<html>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Cffx8ZMp2q4" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</html>
