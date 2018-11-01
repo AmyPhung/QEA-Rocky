@@ -1,8 +1,24 @@
-## 11/1 Checkin
+# 11/1 Checkin
 
-## Events:
+## Events
+#### Custom Event: Bridge of Death!
+In this event, we plan on making the Rocky successfully traverse the bridge of death previously conquered by the NEATO.
+If we are very successful in this attempt, then the judging rubric is based on how quickly we're able to transverse the bridge. If not, then the rubric will be based on how far the Rocky makes it across the bridge.
 
 ## Preparation Plan
+To prepare for this event, we will develop the codebase for the Rocky in the following increments:
++ Step 1: Rocky can stand (relatively) still without falling
++ Step 2: We can set the velocity the Rocky drives at
++ Step 3: We can set the position the Rocky should get to
++ Step 4: We can control the angle the Rocky turns to
++ Step 5: We can control the curve at which the Rocky drives along
++ Step 6: Bridge of Death, here we come!
+
+The equations we will need in order to complete this challenge include a transfer function that accounts for angle, velocity, position, turn radius, and the error off of desired curve.  
 
 ## Video
-<style>.embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; } .embed-container iframe, .embed-container object, .embed-container embed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }</style><div class='embed-container'><iframe src='https://youtu.be/Cffx8ZMp2q4' frameborder='0' allowfullscreen></iframe></div>
+https://youtu.be/Cffx8ZMp2q4
+
+<html>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Cffx8ZMp2q4" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</html>
