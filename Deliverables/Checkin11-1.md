@@ -19,7 +19,7 @@ To prepare for this event, we will develop the codebase for the Rocky in the fol
 
 ### Battlebots Prep
 + **Step 1:** For this event, it will be helpful to be able to have control over velocity, position, and steering angle (should be possible from previous event)
-+ **Step 2:** Being able to send commands to the Rocky via bluetooth  
++ **Step 2:** Send commands to the Rocky via Bluetooth
 + **Step 3:** Having a heavy robot will give us an advantage in this event, so making the Rocky as heavy as possible without sacrificing performance will be useful
 
 The equations we will need in order to complete this challenge include a transfer function that accounts for angle, velocity, position, turn radius, and the error off of desired curve.  

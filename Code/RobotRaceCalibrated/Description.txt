@@ -1,0 +1,8 @@
+Does well:
+- Can stand well
+- Calibration works well
+
+Does less well:
+- Kinda drifts still - Works well, but eventually goes way out of control - maybe because errors accumulate too much
+- Doesn't work on anything but Rocky #16
+- Doesn't go in a straight line

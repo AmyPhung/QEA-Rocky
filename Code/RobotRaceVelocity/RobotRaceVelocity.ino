@@ -11,6 +11,7 @@
 #define STATE_WAITING 0     // waiting to start the race
 #define STATE_RUNNING 1     // running the race
 #define STATE_TERMINATING 2 // done with the race
+#define DEBUG true
 
 // we start in the waiting state
 int state = STATE_WAITING;
@@ -77,6 +78,11 @@ void updatePWMs(float timeMS, float totalDistanceLeft, float totalDistanceRight,
     leftMotorPWM = 0;
     rightMotorPWM = 0;
   }
+
+  if (DEBUG){
+    Serial.print("Left Velocity: "); Serial.print(vL);
+    Serial.print(" - Right Velocity: "); Serial.println(vR);
+    }
   
 }
 
