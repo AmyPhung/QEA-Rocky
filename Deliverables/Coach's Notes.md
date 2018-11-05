@@ -8,8 +8,7 @@ Transfer Function:
 How transfer function was derived:
 
 <html>
-<div class="mxgraph" style="max-width:100%;border:1px solid transparent;" data-mxgraph="{&quot;highlight&quot;:&quot;#0000ff&quot;,&quot;nav&quot;:true,&quot;resize&quot;:true,&quot;toolbar&quot;:&quot;zoom layers lightbox&quot;,&quot;edit&quot;:&quot;_blank&quot;,&quot;url&quot;:&quot;https://raw.githubusercontent.com/AmyPhung/QEA-Rocky/master/Deliverables/Angle-Speed-Position%20Diagram.xml&quot;}"></div>
-<script type="text/javascript" src="https://www.draw.io/embed2.js?&fetch=https%3A%2F%2Fraw.githubusercontent.com%2FAmyPhung%2FQEA-Rocky%2Fmaster%2FDeliverables%2FAngle-Speed-Position%2520Diagram.xml"></script>
+<iframe frameborder="0" style="width:100%;height:111px;" src="https://www.draw.io/?lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=Angle-Speed-Position%20Diagram.xml#Uhttps%3A%2F%2Fraw.githubusercontent.com%2FAmyPhung%2FQEA-Rocky%2Fmaster%2FDeliverables%2FAngle-Speed-Position%2520Diagram.xml"></iframe>
 </html>
 **Modeling Rocky**
 
