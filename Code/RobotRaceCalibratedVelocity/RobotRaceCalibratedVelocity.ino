@@ -8,7 +8,7 @@
 //  The robot has a hardcoded angle offset between the lying down and the
 //    standing up configuration.  This offset can be modified in Balance.cpp around the lines below:
 //
-//      // this is based on coarse measurement of what I think the angle would be resting on the flat surface. 
+//      // this is based on coarse measurement of what I think the angle would be resting on the flat surface.
 //      // this corresponds to 94.8 degrees
 //      angle = 94827-6000;
 //
@@ -52,11 +52,20 @@ float leftMotorPWM = 0;
 float rightMotorPWM = 0;
 
 //initializing controller constants
-// V1
-float Kp = 6.78;
+// Works, but really aggressive
+float Kp = 6.78;//6.78
 float Ki = 50; ///
-float Jp = 140;
-float Ji = 0;
+float Jp = 720;
+float Ji = 800;
+float Zp = 0;
+
+//Working, somewhat aggressive
+//float Kp = 6.78;//6.78
+//float Ki = 50; ///
+//float Jp = 426;
+//float Ji = 800;
+//float Zp = 0;
+
 
 //float Kp = 5;
 //float Ki = 70; ///
@@ -74,7 +83,7 @@ float angleDesired = 0;
 void balanceDoDriveTicks();
 
 extern int32_t displacement;
-int32_t prev_displacement=0;
+int32_t prev_displacement = 0;
 
 LSM6 imu;
 Balboa32U4Motors motors;
@@ -82,48 +91,42 @@ Balboa32U4Encoders encoders;
 Balboa32U4Buzzer buzzer;
 Balboa32U4ButtonA buttonA;
 
-void updatePWMs(float totalDistanceLeft, float totalDistanceRight, float vL, float vR, float angleRad, float angleRadAccum) {
-  /* You will fill this function in with your code to run the race.  The inputs to the function are:
-   *    totalDistanceLeft: the total distance travelled by the left wheel (meters) as computed by the encoders
-   *    totalDistanceRight: the total distance travelled by the right wheel (meters) as computed by the encoders
-   *    vL: the velocity of the left wheel (m/s) measured over the last 10ms
-   *    vR: the velocity of the right wheel (m/s) measured over the last 10ms
-   *    angleRad: the angle in radians relative to vertical (note: not the same as error)
-   *    angleRadAccum: the angle integrated over time (note: not the same as error)
-   */
-
-  Serial.print(angleRad);
-  float E_angle = angleRad-angleDesired;
-  float vLDesired = Kp*E_angle + Ki*angleRadAccum;
-  float vRDesired = Kp*E_angle + Ki*angleRadAccum;
-  float E_vL = vLDesired-vL;
-  float E_vR = vRDesired-vR;
-  
-  leftMotorPWM = Jp*E_vL-Ji*totalDistanceLeft;
-  rightMotorPWM = Jp*E_vR-Ji*totalDistanceRight;
-  
-  if (DEBUG) {
-    Serial.print("Error Angle: "); Serial.println(E_angle);
-    Serial.print("Velocity Desired: "); Serial.println(vLDesired);
-    Serial.print("Error Velocity: "); Serial.println(E_vL);
-    Serial.print("Final PWM: "); Serial.println(leftMotorPWM);
-  }
-  
-  if (leftMotorPWM > 300){
-      leftMotorPWM = 300;}
-  else if (leftMotorPWM < -300){
-      leftMotorPWM = -300;}
-      
-  if (rightMotorPWM > 300){
-      rightMotorPWM = 300;}
-  else if (rightMotorPWM < -300){
-      rightMotorPWM = -300;}
-}
+//void updatePWMs(float leftMotorPWM, float rightMotorPWM) {
+//  /* You will fill this function in with your code to run the race.  The inputs to the function are:
+//        totalDistanceLeft: the total distance travelled by the left wheel (meters) as computed by the encoders
+//        totalDistanceRight: the total distance travelled by the right wheel (meters) as computed by the encoders
+//        vL: the velocity of the left wheel (m/s) measured over the last 10ms
+//        vR: the velocity of the right wheel (m/s) measured over the last 10ms
+//        angleRad: the angle in radians relative to vertical (note: not the same as error)
+//        angleRadAccum: the angle integrated over time (note: not the same as error)
+//  */
+//
+//  rightMotorPWM =
+//
+//  if (DEBUG) {
+//    Serial.print("Final Left PWM: "); Serial.println(leftMotorPWM);
+//    Serial.print("Final Right PWM: "); Serial.println(rightMotorPWM);
+//  }
+//
+//  if (leftMotorPWM > 300) {
+//    leftMotorPWM = 300;
+//  }
+//  else if (leftMotorPWM < -300) {
+//    leftMotorPWM = -300;
+//  }
+//
+//  if (rightMotorPWM > 300) {
+//    rightMotorPWM = 300;
+//  }
+//  else if (rightMotorPWM < -300) {
+//    rightMotorPWM = -300;
+//  }
+//}
 
 uint32_t prev_time;
 
 void setup()
-{ 
+{
   // I know this should be somwhere between 90825 and 90750
   angle = 90750;
   Serial.begin(9600);
@@ -150,22 +153,24 @@ void newBalanceUpdate()
   static uint32_t lastMillis;
   uint32_t ms = millis();
 
-  if ((uint32_t)(ms - lastMillis) < UPDATE_TIME_MS) { return; }
+  if ((uint32_t)(ms - lastMillis) < UPDATE_TIME_MS) {
+    return;
+  }
   balanceUpdateDelayedStatus = ms - lastMillis > UPDATE_TIME_MS + 1;
   lastMillis = ms;
 
   // call functions to integrate encoders and gyros
   balanceUpdateSensors();
- 
-//  if (imu.a.x < 0)
-//  {
-//    lyingDown();
-//    isBalancingStatus = false;
-//  }
-//  else
-//  {
-//    isBalancingStatus = true;
-//  }
+
+  //  if (imu.a.x < 0)
+  //  {
+  //    lyingDown();
+  //    isBalancingStatus = false;
+  //  }
+  //  else
+  //  {
+  //    isBalancingStatus = true;
+  //  }
 }
 
 
@@ -183,63 +188,63 @@ void loop()
 
 
 
-  newBalanceUpdate();                    // run the sensor updates. this function checks if it has been 10 ms since the previous 
-  
-  if(angle > 3000 || angle < -3000)      // If angle is not within +- 3 degrees, reset counter that waits for start
+  newBalanceUpdate();                    // run the sensor updates. this function checks if it has been 10 ms since the previous
+
+  if (angle > 3000 || angle < -3000)     // If angle is not within +- 3 degrees, reset counter that waits for start
   {
     start_counter = 0;
   }
 
   bool shouldPrint = cur_time - prev_print_time > 105;
   shouldPrint = false; // ELEPHANT - I just set this to false so that it wouldn't be printing all this extra stuff for troubleshooting
-  if(shouldPrint)   // do the printing every 105 ms. Don't want to do it for an integer multiple of 10ms to not hog the processor
+  if (shouldPrint)  // do the printing every 105 ms. Don't want to do it for an integer multiple of 10ms to not hog the processor
   {
-        Serial.print(angle_rad);  
-        Serial.print("\t");
-        Serial.print(angle_rad_accum);  
-        Serial.print("\t");
-        Serial.print(leftMotorPWM);
-        Serial.print("\t");
-        Serial.print(rightMotorPWM);
-        Serial.print("\t");
-        Serial.print(vL);
-        Serial.print("\t");
-        Serial.print(vR);
-        Serial.print("\t");
-        Serial.print(totalDistanceLeft);
-        Serial.print("\t");
-        Serial.println(totalDistanceRight);
+    Serial.print(angle_rad);
+    Serial.print("\t");
+    Serial.print(angle_rad_accum);
+    Serial.print("\t");
+    Serial.print(leftMotorPWM);
+    Serial.print("\t");
+    Serial.print(rightMotorPWM);
+    Serial.print("\t");
+    Serial.print(vL);
+    Serial.print("\t");
+    Serial.print(vR);
+    Serial.print("\t");
+    Serial.print(totalDistanceLeft);
+    Serial.print("\t");
+    Serial.println(totalDistanceRight);
 
-        prev_print_time = cur_time;
-/* Uncomment this and comment the above if doing wireless
-        Serial1.print(angle_rad);  
-        Serial1.print("\t");
-        Serial1.print(angle_rad_accum);  
-        Serial1.print("\t");
-        Serial1.print(PWM_left);
-        Serial1.print("\t");
-        Serial1.print(PWM_right);
-        Serial1.print("\t");
-        Serial1.print(vL);
-        Serial1.print("\t");
-        Serial1.println(vR);
-       */
+    prev_print_time = cur_time;
+    /* Uncomment this and comment the above if doing wireless
+            Serial1.print(angle_rad);
+            Serial1.print("\t");
+            Serial1.print(angle_rad_accum);
+            Serial1.print("\t");
+            Serial1.print(PWM_left);
+            Serial1.print("\t");
+            Serial1.print(PWM_right);
+            Serial1.print("\t");
+            Serial1.print(vL);
+            Serial1.print("\t");
+            Serial1.println(vR);
+    */
   }
 
-  float delta_t = (cur_time - prev_time)/1000.0;
+  float delta_t = (cur_time - prev_time) / 1000.0;
 
   // handle the case where this is the first time through the loop
   if (prev_time == 0) {
     delta_t = 0.01;
   }
-  
+
   // every UPDATE_TIME_MS, check if angle is within +- 3 degrees and we haven't set the start flag yet
-  if(cur_time - prev_time > UPDATE_TIME_MS && angle > -3000 && angle < 3000 && !armed_flag)   
+  if (cur_time - prev_time > UPDATE_TIME_MS && angle > -3000 && angle < 3000 && !armed_flag)
   {
     // increment the start counter
     start_counter++;
     // If the start counter is greater than 30, this means that the angle has been within +- 3 degrees for 0.3 seconds, then set the start_flag
-    if(start_counter > 30)
+    if (start_counter > 30)
     {
       armed_flag = 1;
       buzzer.playFrequency(DIV_BY_10 | 445, 1000, 15);
@@ -247,36 +252,75 @@ void loop()
   }
 
   // angle is in millidegrees, convert it to radians and subtract the desired theta
-  angle_rad = ((float)angle)/1000/180*3.14159;
+  angle_rad = ((float)angle) / 1000 / 180 * 3.14159;
 
   // only start when the angle falls outside of the 3.0 degree band around 0.  This allows you to let go of the
   // robot before it starts balancing
-  if(cur_time - prev_time > UPDATE_TIME_MS && (angle < -3000 || angle > 3000) && armed_flag)   
+  if (cur_time - prev_time > UPDATE_TIME_MS && (angle < -3000 || angle > 3000) && armed_flag)
   {
     start_flag = 1;
     armed_flag = 0;
     angle_rad_accum = 0.0;
+    error_left_accum = 0.0;
+    error_right_accum = 0.0;
   }
 
   // every UPDATE_TIME_MS, if the start_flag has been set, do the balancing
-  if(cur_time - prev_time > UPDATE_TIME_MS && start_flag)
+  if (cur_time - prev_time > UPDATE_TIME_MS && start_flag)
   {
     // set the previous time to the current time for the next run through the loop
     prev_time = cur_time;
 
     // speedLeft and speedRight are just the change in the encoder readings
     // wee need to do some math to get them into m/s
-    vL = METERS_PER_CLICK*speedLeft/delta_t;
-    vR = METERS_PER_CLICK*speedRight/delta_t;
+    vL = METERS_PER_CLICK * speedLeft / delta_t;
+    vR = METERS_PER_CLICK * speedRight / delta_t;
 
-    totalDistanceLeft = METERS_PER_CLICK*distanceLeft;
-    totalDistanceRight = METERS_PER_CLICK*distanceRight;
-    angle_rad_accum += angle_rad*delta_t;
+    totalDistanceLeft = METERS_PER_CLICK * distanceLeft;
+    totalDistanceRight = METERS_PER_CLICK * distanceRight;
+    angle_rad_accum += angle_rad * delta_t;
 
-    updatePWMs(totalDistanceLeft, totalDistanceRight, vL, vR, angle_rad, angle_rad_accum);
+    // CONTROLLER STARTS HERE ---------------------------------------------------------------------------------
+
+    float E_angle = angle_rad - angleDesired - Zp * (totalDistanceLeft + totalDistanceRight) / 2;
+    float vLDesired = Kp * E_angle + Ki * angle_rad_accum;
+    float vRDesired = Kp * E_angle + Ki * angle_rad_accum;
+    float E_vL = vLDesired - vL;
+    float E_vR = vRDesired - vR;
+
+    error_left_accum += (vL-vLDesired)*delta_t;
+    error_right_accum += (vR-vRDesired)*delta_t;
+    
+    leftMotorPWM = Jp * E_vL - Ji * error_left_accum;
+    rightMotorPWM = Jp * E_vR - Ji * error_right_accum;
+    
+    if (leftMotorPWM > 300) {
+      leftMotorPWM = 300;
+    }
+    else if (leftMotorPWM < -300) {
+      leftMotorPWM = -300;
+    }
+
+    if (rightMotorPWM > 300) {
+      rightMotorPWM = 300;
+    }
+    else if (rightMotorPWM < -300) {
+      rightMotorPWM = -300;
+    }
+
+    if (DEBUG) {
+      Serial.print("Error Angle: "); Serial.println(E_angle);
+      Serial.print("Velocity Desired: "); Serial.println(vLDesired);
+      Serial.print("Error Velocity: "); Serial.println(E_vL);
+    }
+
+    // CONTROLLER ENDS HERE ---------------------------------------------------------------------------------
+
+
+    //updatePWMs(error_left_accum,error_right_accum);
 
     // if the robot is more than 45 degrees, shut down the motor
-    if(start_flag && fabs(angle_rad) > FORTY_FIVE_DEGREES_IN_RADIANS)
+    if (start_flag && fabs(angle_rad) > FORTY_FIVE_DEGREES_IN_RADIANS)
     {
       // reset the accumulated errors here
       start_flag = 0;   /// wait for restart
@@ -284,7 +328,7 @@ void loop()
       // trying to make it so that Rocky has no brakes
       //motors.setSpeeds(0, 0);
       motors.setSpeeds((int)leftMotorPWM, (int)rightMotorPWM);
-    } else if(start_flag) {
+    } else if (start_flag) {
       motors.setSpeeds((int)leftMotorPWM, (int)rightMotorPWM);
     }
   }
@@ -292,7 +336,7 @@ void loop()
   // kill switch
   if (buttonA.getSingleDebouncedPress())
   {
-      motors.setSpeeds(0,0);
-      while(!buttonA.getSingleDebouncedPress());
+    motors.setSpeeds(0, 0);
+    while (!buttonA.getSingleDebouncedPress());
   }
 }
