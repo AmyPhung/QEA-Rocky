@@ -40,9 +40,6 @@
 #define DEBUG false
 #define CMD_TIME 1832
 
-float desiredDistanceLeft = .3;
-float desiredDistanceRight = .3;
-
 extern int32_t angle_accum;
 extern int32_t speedLeft;
 extern int32_t driveLeft;
@@ -75,38 +72,6 @@ Balboa32U4Motors motors;
 Balboa32U4Encoders encoders;
 Balboa32U4Buzzer buzzer;
 Balboa32U4ButtonA buttonA;
-
-//void updatePWMs(float leftMotorPWM, float rightMotorPWM) {
-//  /* You will fill this function in with your code to run the race.  The inputs to the function are:
-//        totalDistanceLeft: the total distance travelled by the left wheel (meters) as computed by the encoders
-//        totalDistanceRight: the total distance travelled by the right wheel (meters) as computed by the encoders
-//        vL: the velocity of the left wheel (m/s) measured over the last 10ms
-//        vR: the velocity of the right wheel (m/s) measured over the last 10ms
-//        angleRad: the angle in radians relative to vertical (note: not the same as error)
-//        angleRadAccum: the angle integrated over time (note: not the same as error)
-//  */
-//
-//  rightMotorPWM =
-//
-//  if (DEBUG) {
-//    Serial.print("Final Left PWM: "); Serial.println(leftMotorPWM);
-//    Serial.print("Final Right PWM: "); Serial.println(rightMotorPWM);
-//  }
-//
-//  if (leftMotorPWM > 300) {
-//    leftMotorPWM = 300;
-//  }
-//  else if (leftMotorPWM < -300) {
-//    leftMotorPWM = -300;
-//  }
-//
-//  if (rightMotorPWM > 300) {
-//    rightMotorPWM = 300;
-//  }
-//  else if (rightMotorPWM < -300) {
-//    rightMotorPWM = -300;
-//  }
-//}
 
 uint32_t prev_time;
 
@@ -269,31 +234,16 @@ void loop()
     angle_rad_accum += angle_rad * delta_t;
     
     // CONTROLLER STARTS HERE ---------------------------------------------------------------------------------
-    float setpoint = totalDistanceLeft-desiredDistanceLeft + totalDistanceRight-desiredDistanceRight;
-    if (setpoint > .2){
-      setpoint = .2;
-    }
-    if (setpoint < -.2){
-      setpoint = -.2;
-    }
-    
-    float E_angle = angle_rad - (angleDesired - (Zp * setpoint / 2)); // Throwing in a squared term just because (but actually because its slow to respond when it drifts)
+    float E_angle = angle_rad - (angleDesired);
     
     eangle_rad_accum += E_angle*delta_t;
     
-    float vLDesired = Kp * E_angle + Ki * eangle_rad_accum + .1;//vLsetpoint;//- Yp;
+    float vLDesired = Kp * E_angle + Ki * eangle_rad_accum + .1;// Added .1 causes robot to drive forwards
     Serial.print("vLDesired"); Serial.println(vLDesired);
-    float vRDesired = Kp * E_angle + Ki * eangle_rad_accum + .1;//vRsetpoint;//+ Yp;
+    float vRDesired = Kp * E_angle + Ki * eangle_rad_accum + .1;// Added .1 causes robot to drive forwards
     Serial.print("vRDesired"); Serial.println(vRDesired);
     float E_vL = vLDesired - vL;
     float E_vR = vRDesired - vR;
-
-    //Serial.print("Angle"); Serial.println(angle_rad);
-    //Serial.print("Angle Desired"); Serial.println(angleDesired);
-    //Serial.print("Setpoint"); Serial.println(setpoint);
-    //Serial.print("Setpoint contribution"); Serial.println(Zp * setpoint / 2);
-    //Serial.print("Error Angle: "); Serial.println(E_angle);
-    //Serial.print("Angle adjustment: ");Serial.println((angleDesired - (Zp * (totalDistanceLeft + totalDistanceRight) / 2)));
 
     error_left_accum += (vL-vLDesired)*delta_t;
     error_right_accum += (vR-vRDesired)*delta_t;

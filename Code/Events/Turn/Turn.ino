@@ -39,8 +39,8 @@
 #define FORTY_FIVE_DEGREES_IN_RADIANS 0.78
 #define DEBUG false
 
-float desiredDistanceLeft = .3;
-float desiredDistanceRight = .3;
+float desiredDistanceLeft = 0;
+float desiredDistanceRight = 0;
 
 extern int32_t angle_accum;
 extern int32_t speedLeft;
@@ -55,69 +55,14 @@ float leftMotorPWM = 0;
 float rightMotorPWM = 0;
 float eangle_rad_accum = 0;
 
-//initializing controller constants
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 630;
-//float Ji = 800;
-//float Zp = 0.86;
-//float Yp = 0.06; // Heading //0.06
-
-/*
- * Notes:
- * For survivor like events, having aggressive constants works well, but agressive constants tend to make robot prone to falling over
- * For battlebots, having more forgiving constants makes robot very stable, but introduces more drift (can be combated with teleoperated control) - position block probably unnecessary
- * 
- */
-//Works, still pretty touchy
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 630;
-//float Ji = 800;
-//float Zp = 0.86;
-
 float Kp = 6.78;
 float Ki = 50;
 float Jp = 316;
 float Ji = 800;
-float Zp = 0.86;//2;//0.86;
-float Yp = 0.06; // THIS WORKS
-
-//Works, but really touchy and still drifts. Checked output, position based angle adjustment works well but robot doesn't respond
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 316;
-//float Ji = 800;
-//float Zp = 0.55;
-//float Yp = 0.0;
-
-// Works, but really aggressive
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 720;
-//float Ji = 800;
-//float Zp = 0;
-
-//Working, somewhat aggressive
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 426;
-//float Ji = 800;
-//float Zp = 0;
-
-
-//float Kp = 5;
-//float Ki = 70;
-//float Jp = 88;
-//float Ji = 0;
-// R2
-//float Kp = 370;
-//float Ki = 1340;
-//float Jp = 88;
-
+float Zp = 0.86;
+float Yp = 0.06; // Velocity added/subtracted from each wheel to spin robot
 
 float angleDesired = 0;
-
 
 void balanceDoDriveTicks();
 
@@ -129,38 +74,6 @@ Balboa32U4Motors motors;
 Balboa32U4Encoders encoders;
 Balboa32U4Buzzer buzzer;
 Balboa32U4ButtonA buttonA;
-
-//void updatePWMs(float leftMotorPWM, float rightMotorPWM) {
-//  /* You will fill this function in with your code to run the race.  The inputs to the function are:
-//        totalDistanceLeft: the total distance travelled by the left wheel (meters) as computed by the encoders
-//        totalDistanceRight: the total distance travelled by the right wheel (meters) as computed by the encoders
-//        vL: the velocity of the left wheel (m/s) measured over the last 10ms
-//        vR: the velocity of the right wheel (m/s) measured over the last 10ms
-//        angleRad: the angle in radians relative to vertical (note: not the same as error)
-//        angleRadAccum: the angle integrated over time (note: not the same as error)
-//  */
-//
-//  rightMotorPWM =
-//
-//  if (DEBUG) {
-//    Serial.print("Final Left PWM: "); Serial.println(leftMotorPWM);
-//    Serial.print("Final Right PWM: "); Serial.println(rightMotorPWM);
-//  }
-//
-//  if (leftMotorPWM > 300) {
-//    leftMotorPWM = 300;
-//  }
-//  else if (leftMotorPWM < -300) {
-//    leftMotorPWM = -300;
-//  }
-//
-//  if (rightMotorPWM > 300) {
-//    rightMotorPWM = 300;
-//  }
-//  else if (rightMotorPWM < -300) {
-//    rightMotorPWM = -300;
-//  }
-//}
 
 uint32_t prev_time;
 
@@ -320,7 +233,8 @@ void loop()
     angle_rad_accum += angle_rad * delta_t;
     
     // CONTROLLER STARTS HERE ---------------------------------------------------------------------------------
-    float setpoint = totalDistanceLeft-desiredDistanceLeft + totalDistanceRight-desiredDistanceRight;
+    
+    float setpoint = totalDistanceLeft-desiredDistanceLeft;
     if (setpoint > .2){
       setpoint = .2;
     }
@@ -328,18 +242,18 @@ void loop()
       setpoint = -.2;
     }
     
-    float E_angle = angle_rad - (angleDesired - (Zp * setpoint / 2)); // Throwing in a squared term just because (but actually because its slow to respond when it drifts)
+    float E_angle = angle_rad - (angleDesired - (Zp * setpoint)); // Throwing in a squared term just because (but actually because its slow to respond when it drifts)
     
     eangle_rad_accum += E_angle*delta_t;
-    float vLDesired = Kp * E_angle + Ki * eangle_rad_accum - Yp;
+    float vLDesired = Kp * E_angle + Ki * eangle_rad_accum;
     float vRDesired = Kp * E_angle + Ki * eangle_rad_accum + Yp;
     float E_vL = vLDesired - vL;
     float E_vR = vRDesired - vR;
 
     Serial.print("Angle"); Serial.println(angle_rad);
     Serial.print("Angle Desired"); Serial.println(angleDesired);
-    Serial.print("Setpoint"); Serial.println(setpoint);
-    Serial.print("Setpoint contribution"); Serial.println(Zp * setpoint / 2);
+    //Serial.print("Setpoint"); Serial.println(setpoint);
+    //Serial.print("Setpoint contribution"); Serial.println(Zp * setpoint / 2);
     //Serial.print("Error Angle: "); Serial.println(E_angle);
     //Serial.print("Angle adjustment: ");Serial.println((angleDesired - (Zp * (totalDistanceLeft + totalDistanceRight) / 2)));
 
