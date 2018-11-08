@@ -4,7 +4,7 @@ syms r(t) v(t) v_mag(t) omega(t)
 % Set parameters
 %w = 2*pi / 10; % change this
 %d = 0.2432;
-d = 0.25; % Wheelbase size
+d = 0.10; % Wheelbase size
 %d = 0.26;
 
 a = 0.4;
@@ -40,13 +40,17 @@ omega = w(t);
 omega(t) = omega(3)
 
 n = 1.07*pi/c;
-m = 179*2;
+m = 179/3;%*2;
 % Generate set of 't's
 t = linspace(1,n,m)';
 
 % Find V_L and V_R
 V_L = double(v_mag(t) - omega(t) * (d/2));
 V_R = double(v_mag(t) + omega(t) * (d/2));
+
+dt = t(2)-t(1);
+P_L = cumtrapz(V_L)*dt;
+P_R = cumtrapz(V_R)*dt;
 
 
 % Make robot move
