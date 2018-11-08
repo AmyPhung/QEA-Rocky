@@ -39,8 +39,8 @@
 #define FORTY_FIVE_DEGREES_IN_RADIANS 0.78
 #define DEBUG false
 
-float desiredDistanceLeft = 0;// .3;
-float desiredDistanceRight = 0;// .3;
+float desiredDistanceLeft = 0;
+float desiredDistanceRight = 0;
 
 extern int32_t angle_accum;
 extern int32_t speedLeft;
@@ -53,62 +53,16 @@ extern int32_t distanceRight;
 float vL, vR, totalDistanceLeft, totalDistanceRight;
 float leftMotorPWM = 0;
 float rightMotorPWM = 0;
+float eangle_rad_accum = 0;
 
-//initializing controller constants
 float Kp = 6.78;
 float Ki = 50;
-float Jp = 630;
+float Jp = 316;
 float Ji = 800;
 float Zp = 0.86;
-float Yp = 0.0; // Heading //0.06
-
-/*
- * Notes:
- * For survivor like events, having aggressive constants works well, but agressive constants tend to make robot prone to falling over
- * For battlebots, having more forgiving constants makes robot very stable, but introduces more drift (can be combated with teleoperated control) - position block probably unnecessary
- * 
- */
-//Works, still pretty touchy
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 630;
-//float Ji = 800;
-//float Zp = 0.86;
-
-//Works, but really touchy and still drifts. Checked output, position based angle adjustment works well but robot doesn't respond
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 316;
-//float Ji = 800;
-//float Zp = 0.55;
-
-// Works, but really aggressive
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 720;
-//float Ji = 800;
-//float Zp = 0;
-
-//Working, somewhat aggressive
-//float Kp = 6.78;
-//float Ki = 50;
-//float Jp = 426;
-//float Ji = 800;
-//float Zp = 0;
-
-
-//float Kp = 5;
-//float Ki = 70;
-//float Jp = 88;
-//float Ji = 0;
-// R2
-//float Kp = 370;
-//float Ki = 1340;
-//float Jp = 88;
-
+float Yp = 0;
 
 float angleDesired = 0;
-
 
 void balanceDoDriveTicks();
 
@@ -121,44 +75,12 @@ Balboa32U4Encoders encoders;
 Balboa32U4Buzzer buzzer;
 Balboa32U4ButtonA buttonA;
 
-//void updatePWMs(float leftMotorPWM, float rightMotorPWM) {
-//  /* You will fill this function in with your code to run the race.  The inputs to the function are:
-//        totalDistanceLeft: the total distance travelled by the left wheel (meters) as computed by the encoders
-//        totalDistanceRight: the total distance travelled by the right wheel (meters) as computed by the encoders
-//        vL: the velocity of the left wheel (m/s) measured over the last 10ms
-//        vR: the velocity of the right wheel (m/s) measured over the last 10ms
-//        angleRad: the angle in radians relative to vertical (note: not the same as error)
-//        angleRadAccum: the angle integrated over time (note: not the same as error)
-//  */
-//
-//  rightMotorPWM =
-//
-//  if (DEBUG) {
-//    Serial.print("Final Left PWM: "); Serial.println(leftMotorPWM);
-//    Serial.print("Final Right PWM: "); Serial.println(rightMotorPWM);
-//  }
-//
-//  if (leftMotorPWM > 300) {
-//    leftMotorPWM = 300;
-//  }
-//  else if (leftMotorPWM < -300) {
-//    leftMotorPWM = -300;
-//  }
-//
-//  if (rightMotorPWM > 300) {
-//    rightMotorPWM = 300;
-//  }
-//  else if (rightMotorPWM < -300) {
-//    rightMotorPWM = -300;
-//  }
-//}
-
 uint32_t prev_time;
 
 void setup()
 {
   // I know this should be somwhere between 90825 and 90750
-  angle = 90750;
+  angle = 90900;//90750;
   Serial.begin(9600);
   prev_time = 0;
   ledYellow(0);
@@ -192,6 +114,7 @@ void newBalanceUpdate()
   // call functions to integrate encoders and gyros
   balanceUpdateSensors();
 
+  // Commented out since this was causing errors
   //  if (imu.a.x < 0)
   //  {
   //    lyingDown();
@@ -216,8 +139,6 @@ void loop()
 
   cur_time = millis();                   // get the current time in miliseconds
 
-
-
   newBalanceUpdate();                    // run the sensor updates. this function checks if it has been 10 ms since the previous
 
   if (angle > 3000 || angle < -3000)     // If angle is not within +- 3 degrees, reset counter that waits for start
@@ -226,7 +147,7 @@ void loop()
   }
 
   bool shouldPrint = cur_time - prev_print_time > 105;
-  shouldPrint = false; // ELEPHANT - I just set this to false so that it wouldn't be printing all this extra stuff for troubleshooting
+  shouldPrint = false;
   if (shouldPrint)  // do the printing every 105 ms. Don't want to do it for an integer multiple of 10ms to not hog the processor
   {
     Serial.print(angle_rad);
@@ -269,7 +190,7 @@ void loop()
   }
 
   // every UPDATE_TIME_MS, check if angle is within +- 3 degrees and we haven't set the start flag yet
-  if (cur_time - prev_time > UPDATE_TIME_MS && angle > -3000 && angle < 3000 && !armed_flag)
+  if (cur_time - prev_time > UPDATE_TIME_MS && angle > -3000 && angle < 3000 && !armed_flag && !start_flag)
   {
     // increment the start counter
     start_counter++;
@@ -309,7 +230,7 @@ void loop()
     totalDistanceLeft = METERS_PER_CLICK * distanceLeft;
     totalDistanceRight = METERS_PER_CLICK * distanceRight;
     angle_rad_accum += angle_rad * delta_t;
-
+    
     // CONTROLLER STARTS HERE ---------------------------------------------------------------------------------
     float setpoint = totalDistanceLeft-desiredDistanceLeft + totalDistanceRight-desiredDistanceRight;
     if (setpoint > .2){
@@ -320,14 +241,19 @@ void loop()
     }
     
     float E_angle = angle_rad - (angleDesired - (Zp * setpoint / 2)); // Throwing in a squared term just because (but actually because its slow to respond when it drifts)
-    float vLDesired = Kp * E_angle + Ki * angle_rad_accum - Yp;
-    float vRDesired = Kp * E_angle + Ki * angle_rad_accum + Yp;
+    
+    eangle_rad_accum += E_angle*delta_t;
+    float vLDesired = Kp * E_angle + Ki * eangle_rad_accum - Yp;
+    float vRDesired = Kp * E_angle + Ki * eangle_rad_accum + Yp;
     float E_vL = vLDesired - vL;
     float E_vR = vRDesired - vR;
 
-    Serial.print("Angle"); Serial.println(angle_rad);
-    Serial.print("Error Angle: "); Serial.println(E_angle);
-    Serial.print("Angle adjustment: ");Serial.println((angleDesired - (Zp * (totalDistanceLeft + totalDistanceRight) / 2)));
+    //Serial.print("Angle"); Serial.println(angle_rad);
+    //Serial.print("Angle Desired"); Serial.println(angleDesired);
+    //Serial.print("Setpoint"); Serial.println(setpoint);
+    //Serial.print("Setpoint contribution"); Serial.println(Zp * setpoint / 2);
+    //Serial.print("Error Angle: "); Serial.println(E_angle);
+    //Serial.print("Angle adjustment: ");Serial.println((angleDesired - (Zp * (totalDistanceLeft + totalDistanceRight) / 2)));
 
     error_left_accum += (vL-vLDesired)*delta_t;
     error_right_accum += (vR-vRDesired)*delta_t;
@@ -355,10 +281,8 @@ void loop()
       Serial.print("Error Velocity: "); Serial.println(E_vL);
     }
 
+
     // CONTROLLER ENDS HERE ---------------------------------------------------------------------------------
-
-
-    //updatePWMs(error_left_accum,error_right_accum);
 
     // if the robot is more than 45 degrees, shut down the motor
     if (start_flag && fabs(angle_rad) > FORTY_FIVE_DEGREES_IN_RADIANS)
@@ -366,6 +290,7 @@ void loop()
       // reset the accumulated errors here
       start_flag = 0;   /// wait for restart
       prev_time = 0;
+      angle_rad_accum = 0;
       // trying to make it so that Rocky has no brakes
       //motors.setSpeeds(0, 0);
       motors.setSpeeds((int)leftMotorPWM, (int)rightMotorPWM);
